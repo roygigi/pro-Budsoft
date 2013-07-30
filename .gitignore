@@ -1,13 +1,25 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
+#include <iostream>
+using namespace std;
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
+void print();
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+void main()
+{
+  print();
+}
+
+void print()
+{
+	for(int i=1;i<=100;i++)
+	{
+		if(i%15 == 0)
+			cout<<"BudSoft"<<endl;
+		else if(i%3 == 0)
+			cout<<"Bud"<<endl;
+		else if(i%5 == 0)
+			cout<<"Soft"<<endl;
+		else
+			cout<<i<<endl;
+	}
+
+}

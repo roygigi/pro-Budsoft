@@ -1,0 +1,225 @@
+#include <iostream> 
+using namespace std;
+
+#include "dijkstra.h"
+
+dijkstra::dijkstra(graph *m,int s)
+{
+  g=m;
+	VerBegin=s;
+	ver = g->get_mat()->getVER();
+	parent = new List[ver];
+	d = new int[ver];
+	for(int i=0;i<ver;i++)
+	{
+		parent[i].setDATA(-1);
+	}
+	parent[VerBegin-1].setDATA(VerBegin);
+	
+	for(int i=0;i<ver;i++)
+	{
+		d[i]=10000;
+	}
+	d[s-1]=0;
+	q = new PriorityQueue(ver,VerBegin);
+	GraphMakabim=NULL;	
+	MainLoop();
+	Main();
+
+	//printParent() ; //for check
+	//PrintDijkstra();
+	//PrintMakab();
+}
+
+void dijkstra::printParent()
+{
+	for(int i=0;i<ver;i++)
+	{
+		int j=parent[i].getDATA();
+		cout<<j<<" parent of: "<<i+1<<endl;
+		List *check=parent[i].getNEXT();
+		while(check!=NULL)
+		{
+			j=check->getDATA();
+			cout<<j<<" parent of: "<<i+1<<endl;
+			check=check->getNEXT();
+		}
+	}
+}
+
+void dijkstra::Main()
+{
+	int i=0;
+	while(i!=-1)
+	{
+		cout<<"*************"<<endl;
+		cout<<"MAIN:\nChoose:\n1 - for Print Dijkstra.\n2 - Print Makab.\n3 - To see Graph Makabim.\n4 - Quit."<<endl;
+		cin>>i;
+		while(i>4 || i<1)
+		{
+			cout<<"MAIN:\nChoose:\n1 - for Print Dijkstra.\n2 - Print Makab.\n3 - To see Graph Makabim.\n4 - Quit."<<endl;
+			cin>>i;
+		}
+		if(i==1)
+			PrintDijkstra();
+		if(i==2)
+			PrintMakab();
+		if(i==3)
+		{
+			int target;
+			cout<<"choose vertex for target:\n";
+			cin>>target;
+			while(target>ver || target<0)
+			{
+				cout<<"choose vertex for target:\n";
+				cin>>target;
+			}
+			Graph_Makabim(target);
+		}
+		if(i==4)
+			i=-1;
+	}
+}
+
+void dijkstra::Graph_Makabim(int target)
+{
+	GraphMakabim = new Adj(ver);
+	int count=0,t=target;
+	int *save=new int[ver];
+	List *check;
+	int j=parent[t-1].getDATA();
+	while(save[0]!=VerBegin)
+	{
+		if(t!=VerBegin)
+		{
+			save[count++]=j;
+			GraphMakabim->setList(j,t,g->get_mat()->getWEIGHT(j,t));
+			check=parent[t-1].getNEXT();
+			while(check!=NULL)
+			{
+				j=check->getDATA();
+				save[count++]=j;
+				GraphMakabim->setList(j,t,g->get_mat()->getWEIGHT(j,t));
+				check=check->getNEXT();
+			}
+		}
+		t=save[--count];
+		j=parent[t-1].getDATA();
+	}
+	cout<<"The Graph Makabim from: "<<VerBegin<<" to: "<<target<<" is:"<<endl;
+	GraphMakabim->print();
+	delete GraphMakabim;
+
+	
+}
+
+void dijkstra::MainLoop()
+{
+	int u=0;
+	u=q->DeleteMin();
+	while(u!=-1)
+	{
+		for(int v=1;v<=ver;v++)
+		{
+			int weight=g->get_mat()->getWEIGHT(u,v);
+			if(weight!=-1)                                // v ל u בדיקה שקיימת קשת מ
+			{
+				if(d[v-1]>d[u-1]+weight)
+				{
+					d[v-1]=d[u-1]+weight;
+					parent[v-1].setDATA(u);
+					q->DecreaseKey(v,d[v-1]);
+				}
+				else if(d[v-1]==d[u-1]+weight)
+				{
+					int ok=0;                          //0 -> good, -1 -> not good
+					List *check=parent[v-1].getNEXT();
+					if(u==v)
+						ok=-1;
+					while(check!=NULL)
+					{
+						int c=check->getDATA();
+						
+							if(c==u)
+								ok=-1;
+						
+						check=check->getNEXT();
+					}
+					
+					if(ok==0)
+					{
+						List *L = new List();
+						L->setDATA(u);
+						L->setNEXT(parent[v-1].getNEXT());
+						parent[v-1].setNEXT(L);
+					}
+					
+					
+				}				
+			}
+		}
+		u=q->DeleteMin();
+	}
+}
+
+void dijkstra::PrintDijkstra()
+{
+	cout<<"Dijkstra's algorithm:\nWeights of the vertices after running Dijkstra:"<<endl;
+	for(int i=0;i<ver;i++)
+	{
+		cout<<"Vertex: "<<i+1<<" ,Weight: "<<d[i]<<endl;
+	}
+}
+
+void dijkstra::PrintMakab()
+{
+	int vertex,TempVertex;
+	char stop='n';	
+	cout<<"Do you want to select a vertex to see the easy route to it?(y/n)"<<endl;
+	cin>>stop;
+	while(stop!='n')
+	{
+		int *save= new int[ver];
+		int counter=0;
+		cout<<"What is the vertex?"<<endl;
+		cin>>vertex;
+		while(vertex<1 || vertex>ver)
+		{
+			cout<<"put again: (1-"<<ver<<")"<<endl;
+			cin>>vertex;
+		}
+		TempVertex=vertex;
+		save[counter++]=vertex;			
+		List *check=&parent[TempVertex-1];
+		while(parent[TempVertex-1].getDATA()!=TempVertex)
+		{
+			save[counter]=parent[TempVertex-1].getDATA();
+			++counter;
+			TempVertex=parent[TempVertex-1].getDATA();
+			
+		}
+		cout<<"The Makab is:"<<endl;
+		cout<<"Begin: "<<TempVertex<<" (Weight: "<<d[TempVertex-1]<<") ";
+		for(int i=counter-2;i>=0;i--)
+		{
+			cout<<"-> "<<save[i]<<" (Weight: "<<d[save[i]-1]<<") ";
+		}
+		delete save;
+		
+		cout<<"\nDo you want to select a vertex to see the easy route to it?(y/n)"<<endl;
+		cin>>stop;
+		while(stop != 'n' && stop != 'y')
+		{
+			cout<<"put again:"<<endl;
+			cin>>stop;
+		}
+	}
+}
+
+dijkstra::~dijkstra()
+{
+	delete [] parent;
+	delete [] d;
+	delete q;
+
+}
